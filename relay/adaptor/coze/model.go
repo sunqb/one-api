@@ -7,6 +7,13 @@ type Message struct {
 	ContentType string `json:"content_type"`
 }
 
+type MultiContent struct {
+	Type    string `json:"type"` // text, image
+	Text    string `json:"text,omitempty"`
+	FileUrl string `json:"file_url,omitempty"`
+	FileId  string `json:"file_id,omitempty"`
+}
+
 type ErrorInformation struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`

@@ -2,12 +2,14 @@ package coze
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/songquanpeng/one-api/common/render"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/songquanpeng/one-api/common/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common"
@@ -48,10 +50,11 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 			cozeRequest.Query = message.StringContent()
 			continue
 		}
-		cozeMessage := Message{
-			Role:    message.Role,
-			Content: message.StringContent(),
-		}
+		// cozeMessage := Message{
+		// 	Role:    message.Role,
+		// 	Content: message.StringContent(),
+		// }
+		cozeMessage := MessageOpenAI2Coze(message)
 		cozeRequest.ChatHistory = append(cozeRequest.ChatHistory, cozeMessage)
 	}
 	return &cozeRequest
@@ -199,4 +202,42 @@ func Handler(c *gin.Context, resp *http.Response, promptTokens int, modelName st
 		responseText = fullTextResponse.Choices[0].Message.StringContent()
 	}
 	return nil, &responseText
+}
+
+func MessageOpenAI2Coze(message model.Message) Message {
+	var messageContent string
+	var contentType string
+	if message.IsStringContent() {
+		messageContent = message.StringContent()
+		contentType = "text"
+	} else {
+		openaiContent := message.ParseContent()
+		contentType = "object_string"
+		var contents []MultiContent
+		for _, part := range openaiContent {
+			var content MultiContent
+			if part.Type == model.ContentTypeText {
+				content.Type = "text"
+				content.Text = part.Text
+			} else if part.Type == model.ContentTypeImageURL {
+				if part.ImageURL.Url == "" {
+					continue
+				}
+				content.Type = "image"
+				content.FileUrl = part.ImageURL.Url
+			}
+			contents = append(contents, content)
+		}
+		// 转成json对象的字符串
+		jsonBytes, err := json.Marshal(contents)
+		if err != nil {
+			logger.Error(context.TODO(), "error marshalling message content: "+err.Error())
+		}
+		messageContent = string(jsonBytes)
+	}
+	return Message{
+		Role:        message.Role,
+		Content:     messageContent,
+		ContentType: contentType,
+	}
 }
