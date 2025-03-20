@@ -3,11 +3,13 @@ package adaptor
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/client"
 	"github.com/songquanpeng/one-api/relay/meta"
-	"io"
-	"net/http"
+	"github.com/songquanpeng/one-api/common/logger"
 )
 
 func SetupCommonRequestHeader(c *gin.Context, req *http.Request, meta *meta.Meta) {
@@ -20,6 +22,7 @@ func SetupCommonRequestHeader(c *gin.Context, req *http.Request, meta *meta.Meta
 
 func DoRequestHelper(a Adaptor, c *gin.Context, meta *meta.Meta, requestBody io.Reader) (*http.Response, error) {
 	fullRequestURL, err := a.GetRequestURL(meta)
+	logger.Debugf(c.Request.Context(), "fullRequestURL: %s", fullRequestURL)
 	if err != nil {
 		return nil, fmt.Errorf("get request url failed: %w", err)
 	}
