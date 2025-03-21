@@ -50,11 +50,11 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 			cozeRequest.Query = message.StringContent()
 			continue
 		}
-		// cozeMessage := Message{
-		// 	Role:    message.Role,
-		// 	Content: message.StringContent(),
-		// }
-		cozeMessage := MessageOpenAI2Coze(message)
+		cozeMessage := Message{
+			Role:    message.Role,
+			Content: message.StringContent(),
+		}
+		// cozeMessage := MessageOpenAI2Coze(message)
 		cozeRequest.ChatHistory = append(cozeRequest.ChatHistory, cozeMessage)
 	}
 	return &cozeRequest
